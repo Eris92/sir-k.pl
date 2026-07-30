@@ -1,0 +1,37 @@
+{
+  email {$ACME_EMAIL}
+}
+
+{$SITE_DOMAIN:sir-k.pl}, www.{$SITE_DOMAIN:sir-k.pl} {
+  root * /srv
+  encode zstd gzip
+
+  @www host www.{$SITE_DOMAIN:sir-k.pl}
+  redir @www https://{$SITE_DOMAIN:sir-k.pl}{uri} permanent
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    X-Content-Type-Options "nosniff"
+    X-Frame-Options "DENY"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Content-Security-Policy "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; form-action 'self' mailto:; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+    X-Robots-Tag "index, follow"
+    -Server
+  }
+
+  @static path *.css *.js *.svg *.png *.jpg *.jpeg *.webp *.ico
+  header @static Cache-Control "public, max-age=604800, immutable"
+  header *.html Cache-Control "no-cache"
+
+  file_server
+
+  log {
+    output file /var/log/caddy/access.log {
+      roll_size 10MiB
+      roll_keep 10
+      roll_keep_for 720h
+    }
+    format json
+  }
+}
